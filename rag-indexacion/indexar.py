@@ -1,23 +1,45 @@
-from sentence_transformers import SentenceTransformer
+from pathlib import Path
 import numpy as np
+import sqlite3
 
-modelo = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+from src.chunking import trocear_por_palabra
+from src.extraccion import limpiar_texto, extraer_texto
+from src.indexado import generar_embedding, guardar_indice
 
-#Corpus Ficticio
-chunks = [
-    "La Alhambra fue iniciada en el siglo XIII por Muhammad I ibn al-Ahmar, fundador de la dinastía nazarí.",
-    "El Patio de los Leones corresponde al reinado de Muhammad V, en el siglo XIV.",
-    "La Acequia Real abastecía de agua al conjunto, obra impulsada por Muhammad I.",
-    "El Generalife era la finca de recreo de los sultanes nazaríes.",
-]
 
-vectores = modelo.encode(chunks, normalize_embeddings=True)
+BASE = Path(__file__).parent
+CORPUS = BASE / "corpus"
+SALIDA = BASE / "salida"
+SALIDA.mkdir(exist_ok=True)
 
-pregunta = "¿Quién mandó construir la Alhambra?"
-vec_pregunta = modelo.encode([pregunta],normalize_embeddings=True)[0]
 
-similitudes = vectores @ vec_pregunta
-mejores = np.argsort(similitudes)[::-1][:2]
+def main():
+    pdfs = sorted(CORPUS.glob("*.pdf"))
+    if not pdfs:
+        print(f"No hay PDFs en {CORPUS.resolve()}. Copia ahi tu corpus.")
+        return
 
-for i in mejores:
-    print(f"{similitudes[i]:.3f}  {chunks[i]}")
+    # 1-3. Extraccion + limpieza + chunking de todo el corpus
+    registros = []                                     # (texto_chunk, documento)
+    for pdf in pdfs:
+        texto = limpiar_texto(extraer_texto(pdf))
+        for c in trocear_por_palabra(texto):
+            registros.append((c, pdf.stem))
+    print(f"{len(registros)} chunks generados de {len(pdfs)} PDF(s)")
+
+    # 4. Embeddings
+    vectores = generar_embedding([t for t, _ in registros])
+
+    # 5. Persistencia
+    guardar_indice(registros, vectores, SALIDA)
+
+    # Verificacion: nº de vectores == nº de chunks guardados
+    n_vec = np.load(SALIDA / "vectors.npy").shape[0]
+    n_bd = sqlite3.connect(SALIDA / "rag.db").execute(
+        "SELECT COUNT(*) FROM chunks").fetchone()[0]
+    print(f"Indice guardado en {SALIDA.resolve()}")
+    print(f"vectors.npy: {n_vec} | rag.db: {n_bd} | cuadra: {n_vec == n_bd}")
+
+
+if __name__ == "__main__":
+    main()
