@@ -4,7 +4,7 @@ from sentence_transformers import SentenceTransformer
 import sqlite3
 import numpy as np
 
-MODELO = "sentence-transformers/all-MiniLM-L6-v2"
+MODELO = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
 def generar_embedding(textos):
     modelo = SentenceTransformer(MODELO)

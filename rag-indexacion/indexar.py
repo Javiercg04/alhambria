@@ -1,10 +1,13 @@
 from pathlib import Path
 import numpy as np
 import sqlite3
+import os
 
-from src.chunking import trocear_por_palabra
-from src.extraccion import limpiar_texto, extraer_texto
+from src.chunking import trocear_por_sentencias
+from src.extraccion import limpiar_texto_completo, extraer_texto
 from src.indexado import generar_embedding, guardar_indice
+
+os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
 
 
 BASE = Path(__file__).parent
@@ -19,22 +22,18 @@ def main():
         print(f"No hay PDFs en {CORPUS.resolve()}. Copia ahi tu corpus.")
         return
 
-    # 1-3. Extraccion + limpieza + chunking de todo el corpus
     registros = []                                     # (texto_chunk, documento)
     for pdf in pdfs:
-        texto = limpiar_texto(extraer_texto(pdf))
-        for c in trocear_por_palabra(texto):
+        texto = limpiar_texto_completo(extraer_texto(pdf))
+        for c in trocear_por_sentencias(texto):
             registros.append((c, pdf.stem))
     print(f"{len(registros)} chunks generados de {len(pdfs)} PDF(s)")
 
-    # 4. Embeddings
     vectores = generar_embedding([t for t, _ in registros])
 
-    # 5. Persistencia
     guardar_indice(registros, vectores, SALIDA)
 
-    # Verificacion: nº de vectores == nº de chunks guardados
-    n_vec = np.load(SALIDA / "vectors.npy").shape[0]
+    n_vec = np.load(SALIDA / "vectores.npy").shape[0]
     n_bd = sqlite3.connect(SALIDA / "rag.db").execute(
         "SELECT COUNT(*) FROM chunks").fetchone()[0]
     print(f"Indice guardado en {SALIDA.resolve()}")

@@ -5,6 +5,7 @@ Dos estrategias equivalentes: elige UNA y úsala de forma consistente en todo
 el proyecto. Los valores por defecto se eligen para no superar el límite de
 256 tokens del modelo all-MiniLM-L6-v2 (ver informe de parámetros).
 """
+import re
 
 def trocear_por_palabra(texto, tam=160, solape=30):
     """
@@ -17,7 +18,7 @@ def trocear_por_palabra(texto, tam=160, solape=30):
     chunks = []
     i = 0
     while i < len(palabras):
-        chunks.append("".join(palabras[i:i + tam]))
+        chunks.append(" ".join(palabras[i:i + tam]))
         i += tam - solape
     return [c for c in chunks if c.strip()]
 
@@ -41,3 +42,20 @@ def trocear_por_caracteres(texto, tam=800, solape=150):
         chunks.append(texto[i:fin].strip())
         i = fin - solape
     return [c for c in chunks if c]
+
+def trocear_por_sentencias(texto, tam=160, solape=1):
+    frases = re.split(r'(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ¿¡«])', texto)
+    frases = [f.strip() for f in frases if f.strip()]
+    chunks, actual, npal, hay_nuevo = [], [], 0, False
+    for f in frases:
+        actual.append(f)
+        npal += len(f.split())
+        hay_nuevo = True
+        if npal >= tam:
+            chunks.append(" ".join(actual))
+            actual = actual[-solape:] if solape else []
+            npal = sum(len(x.split()) for x in actual)
+            hay_nuevo = False
+    if actual and hay_nuevo:
+        chunks.append(" ".join(actual))
+    return chunks
