@@ -1,7 +1,7 @@
 import fitz
 import re
 
-ruta = "corpus/N_22_08.pdf"
+ruta = "../corpus/N_22_08.pdf"
 
 def extraer_texto(ruta):
     doc = fitz.open(ruta)
