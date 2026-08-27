@@ -41,7 +41,7 @@ fun MessageBar(
         TextField(
             value = value,
             onValueChange = onValueChange,
-            placeholder = { Text("Esccribe un mensaje...") },
+            placeholder = { Text("Escribe un mensaje...") },
             modifier = Modifier.weight(1f),
             shape = RoundedCornerShape(244.dp),
             colors = TextFieldDefaults.colors(

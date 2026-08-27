@@ -81,11 +81,9 @@ for p in leer_preguntas(PREGUNTAS):
 
 
     comunes = len(set(top_fp32) & set(top_int8))
-    print(f"  Trozos en común (de 5): {comunes}/5")
     cosenos.append(cos)
     comunes_lista.append(comunes)
-    print(f"\nPregunta: {p}")
-    print(f"  Paridad coseno fp32 vs int8: {cos:.5f}")
+
 
 
 cosenos = np.array(cosenos)

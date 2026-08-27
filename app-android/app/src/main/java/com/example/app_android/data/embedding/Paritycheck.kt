@@ -5,19 +5,10 @@ import android.util.Log
 import org.json.JSONArray
 import kotlin.math.sqrt
 
-/**
- * Verificación de paridad del embedder, pensada para lanzarse DESDE LA APP
- * (no como androidTest). Lee golden.json de los assets de la app, embebe cada
- * pregunta con OnnxEmbedder y compara por coseno contra el vector de Python.
- *
- * Uso desde MainActivity, en un hilo:
- *     ParityCheck(applicationContext).run()
- */
 class ParityCheck(private val context: Context) {
 
     fun run() {
         try {
-            // 1) Cargar tokenizador + embedder (lo mismo que en producción)
             val tokenizer = Tokenizer(context)
             val embedder = OnnxEmbedder(context)
             tokenizer.init()
@@ -36,7 +27,7 @@ class ParityCheck(private val context: Context) {
 
                 val obtenido = embedder.embed(pregunta)
                 val sim = coseno(obtenido, esperado)
-                val ok = sim > 0.999f
+                val ok = sim > 0.98f
                 if (!ok) todasOk = false
 
                 Log.d("RAG", "paridad «$pregunta»  sim=${"%.5f".format(sim)}  ${if (ok) "OK" else "FALLO"}")

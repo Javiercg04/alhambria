@@ -30,14 +30,15 @@ import com.example.app_android.ui.theme.AlhambraArena
 import com.example.app_android.ui.theme.AlhambraCrema
 import com.example.app_android.ui.theme.AlhambraTerracota
 import com.example.app_android.ui.theme.AlhambraTextoOscuro
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.example.app_android.viewmodel.ChatViewModel
-
+import android.util.Log
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.LinearProgressIndicator
 
 @Composable
 fun ChatScreen(vm: ChatViewModel) {
-
     var message by remember {
         mutableStateOf(
             listOf(
@@ -50,6 +51,7 @@ fun ChatScreen(vm: ChatViewModel) {
         )
     }
 
+    val listo by vm.listo.collectAsState()
     var input by remember { mutableStateOf("") }
     var waiting by remember { mutableStateOf(false) }
 
@@ -70,15 +72,13 @@ fun ChatScreen(vm: ChatViewModel) {
         waiting = true
         scrollToBottom()
 
+
         val start = System.currentTimeMillis()
         scope.launch {
-            val fragmentos = vm.responder(text)
-            android.util.Log.d("RAG", "fragmentos recuperados = ${fragmentos.size}")
+            val respuesta = vm.responder(text)
+            Log.d("LLM_RESULT", "RESULTADO COMPLETO = [$respuesta]")
+            Log.d("LLM_RESULT", "RESULTADO ES NULL = ${respuesta == null}")
             val elapsedMs = System.currentTimeMillis() - start
-
-            val respuesta = fragmentos.joinToString("\n\n") { (frag, score) ->
-                "[${"%.3f".format(score)}] $frag"
-            }
 
             message = message + Message(
                 text = respuesta,
@@ -95,25 +95,42 @@ fun ChatScreen(vm: ChatViewModel) {
         containerColor = AlhambraArena
     ) {
         innerPadding ->
-        Column(
-            Modifier.fillMaxSize().padding(innerPadding)
-        ) {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.weight(1f).fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                items(message) { message -> ChatBubble(message) }
-                if (waiting) item { TypingIndicator() }
-            }
 
-            MessageBar(
-                value = input,
-                onValueChange = { input = it },
-                onSend = { send() },
-                enabled = !waiting
-            )
+        if(!listo) {
+            val progreso by vm.progreso.collectAsState()
+            Column(
+                Modifier.fillMaxSize().padding(innerPadding),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text("Preparando el Asistente", color = AlhambraTextoOscuro)
+                Spacer(Modifier.height(16.dp))
+                if ( progreso > 0f && progreso < 1f)
+                    LinearProgressIndicator(progress = { progreso })
+                else
+                    CircularProgressIndicator(color = AlhambraTerracota)
+            }
+        } else {
+            Column(
+                Modifier.fillMaxSize().padding(innerPadding)
+            ) {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(message) { m -> ChatBubble(m) }
+                    if (waiting) item { TypingIndicator() }
+                }
+
+                MessageBar(
+                    value = input,
+                    onValueChange = { input = it },
+                    onSend = { send() },
+                    enabled = !waiting && listo
+                )
+            }
         }
     }
 }

@@ -12,23 +12,34 @@ import com.example.app_android.ui.screen.ChatScreen
 import com.example.app_android.ui.theme.chatAITheme
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.lifecycleScope
+import com.example.app_android.domain.InferenceAPI
+import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
+import android.util.Log
+import org.koin.androidx.compose.koinViewModel
 import com.example.app_android.data.embedding.ParityCheck
-
 class MainActivity : ComponentActivity() {
+
+    private val inference: InferenceAPI by inject()
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Thread {
+            try {
+                ParityCheck(this).run()
+            } catch (e: Throwable) {
+                Log.e("RAG", "Error: ${e.message}", e)
+            }
+        }.start()
 
         setContent {
             chatAITheme {
-                val contexto = LocalContext.current
-                val vm = remember {
-                    val embedder = OnnxEmbedder(contexto)
-                    val loader = LeerDB(contexto)
-                    val retriever = Retriever(contexto, embedder, loader)
-                    ChatViewModel(retriever)
-                }
-                ChatScreen(vm)
+                val vm: ChatViewModel = koinViewModel()
+                ChatScreen(vm = vm)
             }
+
         }
 
     }

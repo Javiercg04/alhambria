@@ -42,7 +42,7 @@ fun ChatBubble(message: Message) {
                 .padding(horizontal = 14.dp, vertical = 10.dp)
         ) {
             Text(
-                text = message.text,
+                text = message.text.toString(),
                 color = if (fromUser) Color.White else AlhambraTextoOscuro,
                 fontSize = 15.sp
             )

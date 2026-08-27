@@ -8,8 +8,9 @@ import java.io.File
 import android.content.Context
 import android.util.Log
 import com.example.app_android.data.embedding.Tokenizer
+import org.koin.core.annotation.Single
 
-
+@Single
 class OnnxEmbedder(private val context: Context) {
 
     private val env = OrtEnvironment.getEnvironment()
@@ -39,13 +40,14 @@ class OnnxEmbedder(private val context: Context) {
         idsTensor.close()
         maskTensor.close()
         result.close()
-
+        Log.d("RAG", "output shape = ${output.info.shape.joinToString()}")
         return vec
     }
 
     private fun assetToFile(assetName: String): File {
         val storageFile = File(context.filesDir,assetName)
-        if(!storageFile.exists()){
+        val waitTam = context.assets.openFd(assetName).length
+        if(!storageFile.exists() || storageFile.length() != waitTam){
             context.assets.open(assetName).use {
                 input -> storageFile.outputStream().use {
                     output -> input.copyTo(output)

@@ -18,10 +18,6 @@ ABREVIATURAS = {
 }
  
 def _dividir_en_frases(texto):
-    """Divide el texto en frases usando . ! ? seguidos de espacio y mayuscula,
-    PERO no corta si la palabra justo antes del punto es una abreviatura
-    conocida o una sola letra (iniciales de nombres, siglas, transliteraciones
-    arabes tipo 'Muhammad b. Yusuf b. Nasr' o fechas '(g. 1232-1273)')."""
     patron = re.compile(r'([.!?])\s+(?=[A-ZÁÉÍÓÚÑ¿¡«])')
     frases, pos = [], 0
     for m in patron.finditer(texto):
@@ -100,7 +96,7 @@ def trocear_por_sentencias(texto, tam=200, solape_frases=2):
     return chunks
 
 
-def trocear_semantica(texto, embedding, percentil=75, tam_max=1328):
+def trocear_semantica(texto, embedding, percentil=75, tam_max=500):
     frases = _dividir_en_frases(texto)
 
     if len(frases) <= 1:

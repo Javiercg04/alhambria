@@ -2,12 +2,13 @@ package com.example.app_android.data.database
 
 import java.io.File
 import android.content.Context
+import org.koin.core.annotation.Single
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-
+@Single
 class LeerDB (private val context: Context) {
 
-    private var nombreDB: String = "rag.db"
+    private var nombreDB: String = "rag_v3.db"
     data class Indice(
         val textos: List<String>,
         val vectores: List<FloatArray>

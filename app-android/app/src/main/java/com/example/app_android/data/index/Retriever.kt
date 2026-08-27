@@ -4,7 +4,9 @@ import android.content.Context
 import com.example.app_android.data.database.LeerDB
 import com.example.app_android.data.embedding.OnnxEmbedder
 import com.example.app_android.data.index.coseno
+import org.koin.core.annotation.Single
 
+@Single
 class Retriever (
     private val context: Context,
     private val embedder: OnnxEmbedder,
@@ -23,7 +25,7 @@ class Retriever (
         vectores = indice.vectores
     }
 
-    fun buscar( pregunta: String, topK: Int = 5): List<Pair<String, Float>> {
+    fun buscar( pregunta: String, topK: Int = 4): List<Pair<String, Float>> {
         val vec = embedder.embed(pregunta)
         val candidatos = vectores.mapIndexed { i,v -> i to v }
         val mejores = obtenerTopKSimilares(vec, candidatos, topK)

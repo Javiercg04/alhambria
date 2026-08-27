@@ -59,7 +59,8 @@ class Tokenizer (private val context: Context) {
     }
     private fun assetToFile(assetName: String): File {
         val storageFile = File(context.filesDir,assetName)
-        if(!storageFile.exists()){
+        val waitTam = context.assets.openFd(assetName).length
+        if(!storageFile.exists() || storageFile.length() != waitTam){
             context.assets.open(assetName).use {
                     input -> storageFile.outputStream().use {
                     output -> input.copyTo(output)

@@ -32,11 +32,13 @@ def main():
             registros.append((c, pdf.stem))
     print(f"{len(registros)} chunks generados de {len(pdfs)} PDF(s)")
 
+    textos = [t for t, _ in registros]
+
     vectores = generar_embedding([t for t, _ in registros])
 
     guardar_indice(registros, vectores, SALIDA)
 
-    con = sqlite3.connect(SALIDA / "rag.db")
+    con = sqlite3.connect(SALIDA / "rag_v3.db")
     n_bd = con.execute("SELECT COUNT(*) FROM chunks").fetchone()[0]
     blob = con.execute("SELECT embedding FROM chunks ORDER BY id LIMIT 1").fetchone()[0]
     con.close()

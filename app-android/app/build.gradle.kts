@@ -1,13 +1,13 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 android {
     namespace = "com.example.app_android"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.app_android"
@@ -49,13 +49,30 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
+
+
     buildFeatures {
         compose = true
     }
 
+    sourceSets {
+        getByName("main") {
+            java.srcDir("build/generated/ksp/main/kotlin")
+        }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
+}
+
+ksp {
+    arg("KOIN_CONFIG_CHECK", "true")
 }
 
 dependencies {
@@ -83,5 +100,13 @@ dependencies {
     // ONNX Runtime Extensions: aporta el operador del tokenizador
     implementation("com.microsoft.onnxruntime:onnxruntime-extensions-android:0.13.0")
 
+    //implementation("com.google.ai.edge.litertlm:litertlm-android:0.13.1")
+    implementation("com.google.ai.edge.litertlm:litertlm-android:latest.release")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    implementation(libs.koin.android)
+    implementation(libs.koin.annotations)
+    implementation(libs.koin.androidx.compose)
+    ksp(libs.koin.ksp.compiler)
 
 }

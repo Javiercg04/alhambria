@@ -3,6 +3,6 @@ from transformers import AutoTokenizer
 import onnx
 
 tok = AutoTokenizer.from_pretrained("BAAI/bge-m3")
-pre, _ = gen_processing_models(tok, pre_kwargs={})   # pre = tokenizador
+pre, _ = gen_processing_models(tok, pre_kwargs={}) 
 onnx.save(pre, "tokenizer.onnx")
 print("tokenizer.onnx generado")
