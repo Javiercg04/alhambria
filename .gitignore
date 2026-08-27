@@ -217,10 +217,13 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
+
 # Modelos y artefactos pesados o regenerables
 *.gguf              # el LLM de 3 GB NUNCA al repo
 venv-rag/
 rag-indexacion/salida/vectors.bin
-rag-indexacion/salida/rag.db*.onnx.data
+rag-indexacion/salida/rag.db*
+.onnx.data
 *bge-m3*
 *.litertlm
+
