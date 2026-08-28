@@ -12,6 +12,13 @@ import kotlinx.coroutines.Dispatchers
 import org.koin.core.annotation.Single
 import kotlinx.coroutines.withContext
 import android.util.Log
+
+data class LLMResponse(
+    val text: String?,
+    val generationTimeMs: Long,
+    val generationTokens: Int,
+    val tokensPerSecond: Double
+)
 @Single(binds = [InferenceAPI::class])
 class LiteRT (
     private val modelProvider: ModelProvider,
@@ -22,11 +29,14 @@ class LiteRT (
     private var conversationConfig: ConversationConfig? = null
 
 
-    override suspend fun initialize(onProgress: (Float) -> Unit) = withContext(Dispatchers.IO){
+    override suspend fun initialize(chosenLlm: AvailableLlm,onProgress: (Float) -> Unit) = withContext(Dispatchers.IO){
         if(engine != null) return@withContext
-        val path = modelProvider.ensureModel(appContext, onProgress)
+
+
+        val llmPath = modelProvider.ensureLlmModel(appContext, chosenLlm, onProgress)
+
         engine = Engine(EngineConfig(
-                modelPath = path,
+                modelPath = llmPath,
                 backend = Backend.CPU(),
                 cacheDir = appContext.cacheDir.path,
             )
@@ -47,21 +57,39 @@ class LiteRT (
 
     }
 
-    override suspend fun getResponse(prompt: String): String? = withContext(Dispatchers.IO){
-        val eng = engine ?: return@withContext null
-        val cfg = conversationConfig ?: return@withContext null
+    override suspend fun getResponse(prompt: String): String? = getResponseWithMetrics(prompt).text
+
+    override suspend fun getResponseWithMetrics(prompt: String): LLMResponse = withContext(Dispatchers.IO){
+        val activeEng = engine ?: return@withContext LLMResponse(null,0,0,0.0)
+        val activeCfg = conversationConfig ?: return@withContext LLMResponse(null,0,0,0.0)
         try {
-            eng.createConversation(cfg).use {
+            activeEng.createConversation(activeCfg).use {
                 conv ->
                 Log.d("LITERT", "Contexto recuperado OK, longitud=${prompt.length}")
+                val starTime = System.currentTimeMillis()
                 val raw = conv.sendMessage(prompt).toString()
+                val generationTimeMs = System.currentTimeMillis() - starTime
                 Log.d("LITERT", "sendMessage devolvió")
-                val respuesta = limpiarRazonamiento(raw)
-                respuesta
+                val response = cleanText(raw)
+
+                val wordCount = response.trim()
+                    .split(Regex("\\s+"))
+                    .count { it.isNotBlank() }
+                val tokenCount = (wordCount * 1.3).toInt()
+                val tokenPerSecond = if ( generationTimeMs > 0) {
+                    tokenCount / ( generationTimeMs / 1000.0 )
+                } else 0.0
+
+                LLMResponse (
+                    text = response,
+                    generationTimeMs = generationTimeMs,
+                    generationTokens = tokenCount,
+                    tokensPerSecond = tokenPerSecond,
+                )
             }
         } catch (e: Exception) {
             Log.e("LITERT", "ERROR EN sendMessage()", e)
-            null
+            LLMResponse(null,0,0,0.0)
         }
     }
 
@@ -71,7 +99,7 @@ class LiteRT (
         engine = null
     }
 
-    private fun limpiarRazonamiento(texto: String): String =
+    private fun cleanText(texto: String): String =
         if ("</think>" in texto) texto.substringAfter("</think>").trim()
         else texto.trim()
 

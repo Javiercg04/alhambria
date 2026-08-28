@@ -3,17 +3,16 @@ package com.example.app_android.data.embedding
 import android.content.Context
 import android.util.Log
 import org.json.JSONArray
+import org.koin.core.annotation.Single
 import kotlin.math.sqrt
-
-class ParityCheck(private val context: Context) {
+@Single
+class ParityCheck(
+    private val context: Context,
+    private val embedder: OnnxEmbedder
+) {
 
     fun run() {
         try {
-            val tokenizer = Tokenizer(context)
-            val embedder = OnnxEmbedder(context)
-            tokenizer.init()
-
-
             // 2) Leer el golden.json de los assets de la APP
             val json = context.assets.open("golden.json").bufferedReader().use { it.readText() }
             val arr = JSONArray(json)

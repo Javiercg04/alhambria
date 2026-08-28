@@ -13,6 +13,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.lifecycle.viewModelScope
+import com.example.app_android.data.embedding.OnnxEmbedder
+import com.example.app_android.data.embedding.ParityCheck
+import com.example.app_android.data.llm.AvailableLlm
+import com.example.app_android.data.llm.LLMResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +26,9 @@ import org.koin.android.annotation.KoinViewModel
 @KoinViewModel
 class ChatViewModel(
     private val inferenceAPI: InferenceAPI,
-    private val chatRepository: ChatRepository
+    private val onnxEmbedder: OnnxEmbedder,
+    private val chatRepository: ChatRepository,
+    private val parityCheck: ParityCheck
 ) : ViewModel() {
 
     private val _listo = MutableStateFlow(false)
@@ -33,11 +39,16 @@ class ChatViewModel(
 
     init {
         viewModelScope.launch {
-            inferenceAPI.initialize { p -> _progreso.value = p}
+            inferenceAPI.initialize(AvailableLlm.GEMMA3) { p -> _progreso.value = 0.5f + p * 0.5f}
+            onnxEmbedder.initialize { p -> _progreso.value = p}
+            launch(Dispatchers.Default) {
+                parityCheck.run()
+            }
+
             _listo.value = true
         }
     }
-    suspend fun responder(pregunta: String): String? =
-        chatRepository.ask(pregunta)
+    suspend fun responder(pregunta: String): LLMResponse =
+        chatRepository.askWithMetrics(pregunta)
 
 }

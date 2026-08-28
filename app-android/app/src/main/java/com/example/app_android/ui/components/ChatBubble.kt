@@ -50,8 +50,17 @@ fun ChatBubble(message: Message) {
 
         // Tiempo de respuesta bajo cada mensaje de la IA
         message.responseTimeMS?.let { ms ->
+            val metricsText = buildString {
+                append("Respondió en %.1f s".format(ms / 1000.0))
+                message.tokenCount?.let {
+                    token -> append(" - $token tok")
+                }
+                message.tokensPerSecond?.let {
+                    tokens -> append(" - %.1f tk/s".format(tokens))
+                }
+            }
             Text(
-                text = "Respondió en %.1f s".format(ms / 1000.0),
+                text = metricsText,
                 color = AlhambraTerracota.copy(alpha = 0.75f),
                 fontSize = 11.sp,
                 modifier = Modifier.padding(top = 3.dp, start = 6.dp, end = 6.dp)

@@ -12,17 +12,35 @@ import java.io.FileOutputStream
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.coroutineContext
 
+data class ModelInfo(
+    val fileName: String,
+    val url: String,
+)
 
+enum class AvailableLlm(val info: ModelInfo){
+    GEMMA3(
+        ModelInfo(
+            fileName = "gemma-3-1b-int4.litertlm",
+            url = "https://github.com/Javiercg04/alhambria/releases/download/v1-models/gemma3-1b-it-int4.litertlm"
+        )
+    ),
+    QWEN3(
+        ModelInfo(
+            fileName = "qwen3.litertlm",
+            url = "https://huggingface.co/litert-community/Qwen3-0.6B/resolve/main/qwen3_0_6b_mixed_int4.litertlm"
+        )
+    )
+}
 @Single
 class ModelProvider {
 
     private companion object {
-        const val MODEL_FILE = "qwen3.litertlm"
-
-        const val MODEL_URL =
-            "https://huggingface.co/litert-community/Qwen3-0.6B/resolve/main/qwen3_0_6b_mixed_int4.litertlm"
-
         const val BUFFER_SIZE = 8 * 1024
+
+        val EMBEDDING_MODEL = ModelInfo(
+            fileName = "bge-m3.int8.onnx",
+            url = "https://github.com/Javiercg04/alhambria/releases/download/v1-models/bge-m3.int8.onnx"
+        )
     }
 
     private val client = OkHttpClient.Builder()
@@ -30,25 +48,37 @@ class ModelProvider {
         .readTimeout(0, TimeUnit.MILLISECONDS)
         .build()
 
-    private fun modelFile(context: Context) = File(context.filesDir, MODEL_FILE)
+    private fun modelFile(context: Context, fileName: String) = File(context.filesDir, fileName)
 
-    fun isReady(context: Context): Boolean = modelFile(context).exists()
+    fun isEmbeddingReady(context: Context): Boolean = modelFile(context, EMBEDDING_MODEL.fileName).exists()
 
-    suspend fun ensureModel(
+    fun isLlmReady(context: Context, llm: AvailableLlm): Boolean = modelFile(context, llm.info.fileName).exists()
+
+    suspend fun ensureLlmModel(
         context: Context,
+        chosenLlm: AvailableLlm,
         onProgress: (Float) -> Unit = {},
     ): String = withContext(Dispatchers.IO) {
-        val target = modelFile(context)
+        val target = modelFile(context,chosenLlm.info.fileName)
         if (target.exists()) return@withContext target.absolutePath
-        downloadTo(target, onProgress)
+        downloadTo(chosenLlm.info, target, onProgress)
         target.absolutePath
     }
 
+    suspend fun ensureEmbeddingModel(
+        context: Context,
+        onProgress: (Float) -> Unit = {},
+    ): String = withContext(Dispatchers.IO){
+        val target = modelFile(context, EMBEDDING_MODEL.fileName)
+        if(target.exists()) return@withContext target.absolutePath
+        downloadTo(EMBEDDING_MODEL,target,onProgress)
+        target.absolutePath
+    }
 
-    private suspend fun downloadTo(target: File, onProgress: (Float) -> Unit) {
+    private suspend fun downloadTo(model: ModelInfo, target: File, onProgress: (Float) -> Unit) {
         val tmp = File(target.parentFile, "${target.name}.tmp").apply { delete() }
         try {
-            val request = Request.Builder().url(MODEL_URL).build()
+            val request = Request.Builder().url(model.url).build()
             client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) error("Descarga fallida: HTTP ${response.code}")
                 val body = response.body ?: error("Respuesta sin cuerpo")

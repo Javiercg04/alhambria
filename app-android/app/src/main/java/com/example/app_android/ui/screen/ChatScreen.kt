@@ -75,15 +75,17 @@ fun ChatScreen(vm: ChatViewModel) {
 
         val start = System.currentTimeMillis()
         scope.launch {
-            val respuesta = vm.responder(text)
-            Log.d("LLM_RESULT", "RESULTADO COMPLETO = [$respuesta]")
-            Log.d("LLM_RESULT", "RESULTADO ES NULL = ${respuesta == null}")
+            val result = vm.responder(text)
+            Log.d("LLM_RESULT", "RESULTADO COMPLETO = [$result]")
+            Log.d("LLM_RESULT", "RESULTADO ES NULL = ${result == null}")
             val elapsedMs = System.currentTimeMillis() - start
 
             message = message + Message(
-                text = respuesta,
+                text = result.text,
                 isUser = false,
-                responseTimeMS = elapsedMs
+                responseTimeMS = result.generationTimeMs,
+                tokenCount = result.generationTokens,
+                tokensPerSecond = result.tokensPerSecond
             )
             waiting = false
             scrollToBottom()

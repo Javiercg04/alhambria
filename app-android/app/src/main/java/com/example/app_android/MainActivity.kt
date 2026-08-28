@@ -26,13 +26,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Thread {
-            try {
-                ParityCheck(this).run()
-            } catch (e: Throwable) {
-                Log.e("RAG", "Error: ${e.message}", e)
-            }
-        }.start()
 
         setContent {
             chatAITheme {
