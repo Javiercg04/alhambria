@@ -6,15 +6,15 @@ from onnxruntime_extensions import get_library_path
 import sqlite3
 import numpy as np
 
+from pathlib import Path
+BASE = Path(__file__).resolve().parent.parent
+
 _opts = ort.SessionOptions()
 _opts.register_custom_ops_library(get_library_path())
-tok = ort.InferenceSession("salida/modelo/tokenizer/tokenizer.onnx", _opts)
+tok = ort.InferenceSession(str(BASE / "salida/modelo/tokenizer/tokenizer.onnx"), _opts)
 
-emb = ort.InferenceSession("salida/modelo/bge-m3.onnx")
+emb = ort.InferenceSession(str(BASE /"salida/modelo/bge-m3.int8.onnx"))
 
-#MODELO = "sentence-transformers/   "
-#MODELO = "sentence-transformers/all-MiniLM-L6-v2"
-MODELO = "BAAI/bge-m3"
 def generar_embedding(textos):
     vecs = []
     for t in textos:
@@ -29,7 +29,7 @@ def generar_embedding(textos):
 def guardar_indice(registros, vectores, salida):
     assert len(registros) == len(vectores)
 
-    con = sqlite3.connect(salida / "rag_v3.db")
+    con = sqlite3.connect(salida / "rag_v4.db")
     con.execute("DROP TABLE IF EXISTS chunks")
     con.execute("CREATE TABLE chunks(id INTEGER PRIMARY KEY, texto TEXT NOT NULL, " \
     "embedding BLOB NOT NULL, fuente TEXT NOT NULL)")
@@ -40,3 +40,6 @@ def guardar_indice(registros, vectores, salida):
     )
     con.commit()
     con.close()
+
+def encode(texto, **kwargs):
+    return generar_embedding(texto, **kwargs)

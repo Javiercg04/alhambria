@@ -20,7 +20,7 @@ data class ModelInfo(
 enum class AvailableLlm(val info: ModelInfo){
     GEMMA3(
         ModelInfo(
-            fileName = "gemma-3-1b-int4.litertlm",
+            fileName = "gemma3-1b-int4.litertlm",
             url = "https://github.com/Javiercg04/alhambria/releases/download/v1-models/gemma3-1b-it-int4.litertlm"
         )
     ),

@@ -1,73 +1,91 @@
-# Evaluación intrínseca de fragmentación — N_22_08.pdf
+# Evaluación intrínseca de fragmentación
 
-Sin preguntas: se mide la calidad de los fragmentos en sí. Extracción y limpieza son idénticas entre estrategias (tu código de src); lo único que cambia es cómo se trocea.
+Sin preguntas: se mide la calidad de los fragmentos en sí. Extracción y limpieza son idénticas entre estrategias; lo único que cambia es cómo se trocea. Los embeddings se calculan con el mismo modelo cuantizado que construye el índice.
+
+## Corpus de partida
+
+| Documento | Palabras | Frases | Palabras/frase |
+|---|---:|---:|---:|
+| martin_alcazaba_torre_homenaje | 10657 | 354 | 30.1 |
+| N_22_08 | 12068 | 220 | 54.9 |
+| **Total** | **22725** | **574** | **39.6** |
 
 ## Métricas por estrategia
 
-| Estrategia | Nº chunks | Palabras (mín/med/máx) | Inicio limpio | Fin limpio | Cohesión intra (muestra) | Huérfanos |
-|---|---:|:--:|---:|---:|---:|---:|
-| A · por caracteres | 77 | 30/222/249 | 16% | 12% | 0.490 | 0 |
-| B · por palabras (actual) | 84 | 70/200/200 | 14% | 4% | 0.486 | 0 |
-| C · por frases | 130 | 200/244/380 | 100% | 100% | 0.515 | 0 |
-| D · por tamaño respetando frases | 75 | 146/226/261 | 12% | 1% | 0.501 | 0 |
-| E · semántico | 114 | 4/143/231 | 100% | 100% | 0.564 | 5 |
+| Estrategia | Nº chunks | Palabras (mín/med/máx) | Inicio limpio | Fin limpio | Cohesión intra | Huérfanos | Factor solape |
+|---|---:|:--:|---:|---:|---:|---:|---:|
+| A · por caracteres | 199 | 16/135/155 | 11% | 5% | 0.470 | 0 | 1.18 |
+| B · por palabras | 198 | 77/135/135 | 10% | 4% | 0.476 | 0 | 1.17 |
+| C · por frases | 168 | 105/135/231 | 100% | 100% | 0.510 | 0 | 1.00 |
+| D · recursiva | 213 | 20/126/170 | 8% | 3% | 0.492 | 0 | 1.18 |
+| E · semántica (elegida) | 170 | 41/134/231 | 100% | 100% | 0.529 | 0 | 1.00 |
+
+### Reparto de fragmentos por documento
+
+| Estrategia | martin_alcazaba_torre_homenaje | N_22_08 |
+|---|---:|---:|
+| A · por caracteres | 94 | 105 |
+| B · por palabras | 93 | 105 |
+| C · por frases | 86 | 82 |
+| D · recursiva | 93 | 120 |
+| E · semántica (elegida) | 88 | 82 |
 
 **Cómo leer la tabla:**
 
-- *Inicio/fin limpio*: % de chunks que empiezan y terminan en un límite de frase. Mide si la estrategia respeta las frases. Por caracteres sale bajo; por frases, cerca del 100%.
-- *Cohesión intra*: cómo de parecidas son entre sí las frases de un mismo chunk. Alta = habla de una sola cosa. **No la maximices sola**: chunks minúsculos dan cohesión alta pero son inútiles; léela junto al tamaño.
+- *Palabras*: mínimo, **media** y máximo por fragmento. En las estrategias de tamaño fijo el mínimo corresponde al último fragmento de cada documento, que recoge el texto sobrante y es más corto que el resto.
+- *Inicio/fin limpio*: % de chunks que empiezan y terminan en un límite de frase. Mide si la estrategia respeta las frases.
+- *Cohesión intra*: similitud coseno media entre todos los pares de frases de un mismo chunk, calculada con el modelo de embeddings del proyecto. Alta = el fragmento habla de una sola cosa. **No la maximices sola**: chunks minúsculos dan cohesión alta pero son inútiles; léela junto al tamaño.
 - *Huérfanos*: chunks con menos de 15 palabras.
+- *Factor de solape*: cuánto texto se contabiliza respecto al corpus original. 1,00 significa sin repetición. **Si dos estrategias tienen factores muy distintos, sus cifras no son comparables entre sí.**
 
-> La mejor fragmentación combina a la vez cortes limpios, cohesión razonable y tamaño útil sin huérfanos. La tabla orienta; la muestra decide.
+## Filas para la tabla LaTeX
 
-## Muestra de fragmentos (léelos y juzga si cada uno es una idea completa)
+```latex
+        Por caracteres             & 199 & 16/135/155        & 11\% & 5\% & 0.470 & 0 & 1.18 \\
+        Por palabras               & 198 & 77/135/135        & 10\% & 4\% & 0.476 & 0 & 1.17 \\
+        Por frases                 & 168 & 105/135/231        & 100\% & 100\% & 0.510 & 0 & 1.00 \\
+        Recursiva                  & 213 & 20/126/170        & 8\% & 3\% & 0.492 & 0 & 1.18 \\
+        Semántica (elegida)        & 170 & 41/134/231        & 100\% & 100\% & 0.529 & 0 & 1.00 \\
+```
+
+## Muestra de fragmentos
 
 ### A · por caracteres
 
-1. (195 pal) La Alhambra y el Generalife de Granada  Resumen Se ofrece aquí una síntesis sobre el conjunto monumental de la Alhambra y el Generalife atendiendo a su evolución histórica y a sus principales características constructivas, decorativas y simbólicas, a partir de las aportaciones de la tradicional y reciente historiografía, y prestando especial atención a los textos árabes nazaríes y a los nuevos dat […]
+1. (131 pal) El presente artículo, es un fragmento de la tesis doctoral: De la QASABAT al-QADiMA a la ALCAZABA ROJA , en la que se realiza un detallado estudio de la Alcazaba de la Alhambra, elaborado gracias a la recopilación y análisis de la diversa y amplia información existente sobre la misma. En este contexto abordamos una descripción del conjunto, y se elige la torre del Homenaje por ser un elemento clav […]
 
-2. (220 pal) Ibn al-Ahmar, conlleva el desarrollo de una nueva y postrera actividad edilicia islámica en el reducido territorio de al-Andalus, que brillará con luz propia hasta la actualidad por haber creado el excepcional conjunto monumental de la Alhambra y el Generalife, síntesis y culminación de la gran arquitectura andalusí, hoy Patrimonio de la Humanidad y uno de los sitios con mayor poder de atracción s […]
+2. (129 pal) Gracias a la documentación gráfica existente y tras numerosas visitas a la Alcazaba; para comprobar y tomar medidas in situ, hemos redibujado la Alcazaba y sus elementos para ser más fieles a la realidad material existente y mostrar con claridad una de las mejores alcazabas hispanomusulmanas. Alhambra; Alcazaba; Torre del Homenaje; Construcción defensiva; Modelado 3D A NEW ARCHITECTURAL APPROACH T […]
 
-3. (221 pal) la irrigó abriendo una acequia con caudal propio y, en menos de un año, estaban listas sus murallas, según el ms. anónimo de Madrid y Copenhague. El lugar elegido, la parte más occidental de la colina, tenía ya denominación y cierto pasado arquitectónico castrense, por cuanto que las crónicas árabes se refieren a una Qalat (fortaleza), Maqil (refugio) o Hisn (castillo), llamada siempre al-Hamra (L […]
+3. (125 pal) en el mejor de los casos la tratan de forma meramente descriptiva, ocultando así el valor de una de las mejores alcazabas de España. Sólo algunos autores, como Manuel Gómez Moreno, Leopoldo Torres Balbás, Jesús Bermúdez Pareja y más recientemente Basilio Pavón Maldonado, Antonio Malpica Cuello y Carlos Vílchez Vílchez entre otros, han profundizado en el tema, dándole a la Alcazaba de la Alhambra l […]
 
-4. (226 pal) del lugar con consecuencias de mucho mayor alcance (fig. 1). El nuevo soberano nazarí, cuyo apellido familiar, al-Ahmar (el Rojo), venía a coincidir con la denominación que ya tenía el lugar y, asimismo, con el topónimo de Granada, de origen latino y vinculado a la fruta de la granada y a su color, nació precisamente en 1195, el año de Alarcos, como dice Ibn al-Jatib, y tomó para su nueva dinastía […]
+### B · por palabras
 
-### B · por palabras (actual)
+1. (135 pal) El presente artículo, es un fragmento de la tesis doctoral: De la QASABAT al-QADiMA a la ALCAZABA ROJA , en la que se realiza un detallado estudio de la Alcazaba de la Alhambra, elaborado gracias a la recopilación y análisis de la diversa y amplia información existente sobre la misma. En este contexto abordamos una descripción del conjunto, y se elige la torre del Homenaje por ser un elemento clav […]
 
-1. (200 pal) La Alhambra y el Generalife de Granada Resumen Se ofrece aquí una síntesis sobre el conjunto monumental de la Alhambra y el Generalife atendiendo a su evolución histórica y a sus principales características constructivas, decorativas y simbólicas, a partir de las aportaciones de la tradicional y reciente historiografía, y prestando especial atención a los textos árabes nazaríes y a los nuevos dato […]
+2. (135 pal) la documentación gráfica existente y tras numerosas visitas a la Alcazaba; para comprobar y tomar medidas in situ, hemos redibujado la Alcazaba y sus elementos para ser más fieles a la realidad material existente y mostrar con claridad una de las mejores alcazabas hispanomusulmanas. Alhambra; Alcazaba; Torre del Homenaje; Construcción defensiva; Modelado 3D A NEW ARCHITECTURAL APPROACH TO THE ALCA […]
 
-2. (200 pal) una nueva y postrera actividad edilicia islámica en el reducido territorio de al-Andalus, que brillará con luz propia hasta la actualidad por haber creado el excepcional conjunto monumental de la Alhambra y el Generalife, síntesis y culminación de la gran arquitectura andalusí, hoy Patrimonio de la Humanidad y uno de los sitios con mayor poder de atracción sobre multitud de personas de todas las g […]
-
-3. (200 pal) la nueva fortaleza, puso a quien dirigiese las obras, la irrigó abriendo una acequia con caudal propio y, en menos de un año, estaban listas sus murallas, según el ms. anónimo de Madrid y Copenhague. El lugar elegido, la parte más occidental de la colina, tenía ya denominación y cierto pasado arquitectónico castrense, por cuanto que las crónicas árabes se refieren a una Qalat (fortaleza), Maqil (r […]
-
-4. (200 pal) Los almohades, en fin, volverán a utilizar la entonces también llamada al-Qasaba al-Hamra (Alcazaba Roja), hasta que con la llegada de Muhammad I se inicia una verdadera refundación del lugar con consecuencias de mucho mayor alcance (fig. 1). El nuevo soberano nazarí, cuyo apellido familiar, al-Ahmar (el Rojo), venía a coincidir con la denominación que ya tenía el lugar y, asimismo, con el topónim […]
+3. (135 pal) descriptiva, ocultando así el valor de una de las mejores alcazabas de España. Sólo algunos autores, como Manuel Gómez Moreno, Leopoldo Torres Balbás, Jesús Bermúdez Pareja y más recientemente Basilio Pavón Maldonado, Antonio Malpica Cuello y Carlos Vílchez Vílchez entre otros, han profundizado en el tema, dándole a la Alcazaba de la Alhambra la importancia que se merece. La necesidad de realizar  […]
 
 ### C · por frases
 
-1. (235 pal) La Alhambra y el Generalife de Granada  Resumen Se ofrece aquí una síntesis sobre el conjunto monumental de la Alhambra y el Generalife atendiendo a su evolución histórica y a sus principales características constructivas, decorativas y simbólicas, a partir de las aportaciones de la tradicional y reciente historiografía, y prestando especial atención a los textos árabes nazaríes y a los nuevos dat […]
+1. (113 pal) El presente artículo, es un fragmento de la tesis doctoral: De la QASABAT al-QADiMA a la ALCAZABA ROJA , en la que se realiza un detallado estudio de la Alcazaba de la Alhambra, elaborado gracias a la recopilación y análisis de la diversa y amplia información existente sobre la misma. En este contexto abordamos una descripción del conjunto, y se elige la torre del Homenaje por ser un elemento clav […]
 
-2. (209 pal) The article takes the contributions of traditional and recent historiography as a starting point, paying special attention to Nasrid Arabic texts and the new toponymical, historical, poetic and functional data recently arisen about some important spaces of the Alhambra. El derrumbamiento del estado almohade y la subsecuente creación del reino nazarí de Granada por parte de Muhammad b. Yusuf b. Nas […]
+2. (130 pal) Gracias a la documentación gráfica existente y tras numerosas visitas a la Alcazaba; para comprobar y tomar medidas in situ, hemos redibujado la Alcazaba y sus elementos para ser más fieles a la realidad material existente y mostrar con claridad una de las mejores alcazabas hispanomusulmanas. Alhambra; Alcazaba; Torre del Homenaje; Construcción defensiva; Modelado 3D A NEW ARCHITECTURAL APPROACH T […]
 
-3. (233 pal) El derrumbamiento del estado almohade y la subsecuente creación del reino nazarí de Granada por parte de Muhammad b. Yusuf b. Nasr Ibn al-Ahmar, conlleva el desarrollo de una nueva y postrera actividad edilicia islámica en el reducido territorio de al-Andalus, que brillará con luz propia hasta la actualidad por haber creado el excepcional conjunto monumental de la Alhambra y el Generalife, síntesi […]
+3. (124 pal) Sólo algunos autores, como Manuel Gómez Moreno, Leopoldo Torres Balbás, Jesús Bermúdez Pareja y más recientemente Basilio Pavón Maldonado, Antonio Malpica Cuello y Carlos Vílchez Vílchez entre otros, han profundizado en el tema, dándole a la Alcazaba de la Alhambra la importancia que se merece. La necesidad de realizar una investigación exhaustiva sobre la Alcazaba de la Alhambra viene motivada po […]
 
-4. (209 pal) La fortaleza roja Muhammad I (g. 1232-1273), perteneciente a una noble familia de origen árabe establecida en Arjona, se proclamó sultán en esta ciudad jiennense en 1232 y, tras declararse vasallo de Fernando III de Castilla, entró pacíficamente en Granada el mes de mayo de 1238 y se instaló en el palacio zirí del siglo XI de la Alcazaba Qadima (Antigua), en la parte  Profesor Titular de la Univer […]
+### D · recursiva
 
-### D · por tamaño respetando frases
+1. (113 pal) El presente artículo, es un fragmento de la tesis doctoral: De la QASABAT al-QADiMA a la ALCAZABA ROJA , en la que se realiza un detallado estudio de la Alcazaba de la Alhambra, elaborado gracias a la recopilación y análisis de la diversa y amplia información existente sobre la misma. En este contexto abordamos una descripción del conjunto, y se elige la torre del Homenaje por ser un elemento clav […]
 
-1. (163 pal) La Alhambra y el Generalife de Granada  Resumen Se ofrece aquí una síntesis sobre el conjunto monumental de la Alhambra y el Generalife atendiendo a su evolución histórica y a sus principales características constructivas, decorativas y simbólicas, a partir de las aportaciones de la tradicional y reciente historiografía, y prestando especial atención a los textos árabes nazaríes y a los nuevos dat […]
+2. (109 pal) histórica y su caracterización arquitectónica, aportando inéditas planimetrías e infografías sobre la Alcazaba Gracias a la documentación gráfica existente y tras numerosas visitas a la Alcazaba; para comprobar y tomar medidas in situ, hemos redibujado la Alcazaba y sus elementos para ser más fieles a la realidad material existente y mostrar con claridad una de las mejores alcazabas hispanomusulma […]
 
-2. (243 pal) data recently arisen about some important spaces of the Alhambra.      El derrumbamiento del estado almohade y la subsecuente creación del reino nazarí de Granada por parte de Muhammad b. Yusuf b Nasr Ibn al-Ahmar, conlleva el desarrollo de una nueva y postrera actividad edilicia islámica en el reducido territorio de al-Andalus, que brillará con luz propia hasta la actualidad por haber creado el e […]
+3. (95 pal) centrado mayoritariamente en el estudio de sus palacios debido a su impresionante arquitectura y deslumbrante belleza Los trabajos y publicaciones dejan de lado la Alcazaba y en el mejor de los casos la tratan de forma meramente descriptiva, ocultando así el valor de una de las mejores alcazabas de España. Sólo algunos autores, como Manuel Gómez Moreno, Leopoldo Torres Balbás, Jesús Bermúdez Parej […]
 
-3. (208 pal) la nueva fortaleza, puso a quien dirigiese las obras, la irrigó abriendo una acequia con caudal propio y, en menos de un año, estaban listas sus murallas, según el ms. anónimo de Madrid y Copenhague El lugar elegido, la parte más occidental de la colina, tenía ya denominación y cierto pasado arquitectónico castrense, por cuanto que las crónicas árabes se refieren a una Qalat (fortaleza), Maqil (re […]
+### E · semántica (elegida)
 
-4. (254 pal) la entonces también llamada al-Qasaba al-Hamra (Alcazaba Roja), hasta que con la llegada de Muhammad I se inicia una verdadera refundación del lugar con consecuencias de mucho mayor alcance (fig. 1) El nuevo soberano nazarí, cuyo apellido familiar, al-Ahmar (el Rojo), venía a coincidir con la denominación que ya tenía el lugar y, asimismo, con el topónimo de Granada, de origen latino y vinculado a […]
+1. (159 pal) El presente artículo, es un fragmento de la tesis doctoral: De la QASABAT al-QADiMA a la ALCAZABA ROJA , en la que se realiza un detallado estudio de la Alcazaba de la Alhambra, elaborado gracias a la recopilación y análisis de la diversa y amplia información existente sobre la misma. En este contexto abordamos una descripción del conjunto, y se elige la torre del Homenaje por ser un elemento clav […]
 
-### E · semántico
+2. (129 pal) Alhambra; Alcazaba; Torre del Homenaje; Construcción defensiva; Modelado 3D A NEW ARCHITECTURAL APPROACH TO THE ALCAZABA AND THE TORRE DEL HOMENAJE I Los textos referentes a la ciudadela de la Alhambra siempre se han centrado mayoritariamente en el estudio de sus palacios debido a su impresionante arquitectura y deslumbrante belleza. Los trabajos y publicaciones dejan de lado la Alcazaba y en el m […]
 
-1. (142 pal) La Alhambra y el Generalife de Granada  Resumen Se ofrece aquí una síntesis sobre el conjunto monumental de la Alhambra y el Generalife atendiendo a su evolución histórica y a sus principales características constructivas, decorativas y simbólicas, a partir de las aportaciones de la tradicional y reciente historiografía, y prestando especial atención a los textos árabes nazaríes y a los nuevos dat […]
-
-2. (170 pal) El derrumbamiento del estado almohade y la subsecuente creación del reino nazarí de Granada por parte de Muhammad b. Yusuf b. Nasr Ibn al-Ahmar, conlleva el desarrollo de una nueva y postrera actividad edilicia islámica en el reducido territorio de al-Andalus, que brillará con luz propia hasta la actualidad por haber creado el excepcional conjunto monumental de la Alhambra y el Generalife, síntesi […]
-
-3. (198 pal) Muy poco después ordenó erigir una nueva sede monárquica sobre la colina de la Sabika (lingote), en el sitio llamado al-Hamra (la Roja), donde marcó los cimientos de la nueva fortaleza, puso a quien dirigiese las obras, la irrigó abriendo una acequia con caudal propio y, en menos de un año, estaban listas sus murallas, según el ms. anónimo de Madrid y Copenhague. El lugar elegido, la parte más occ […]
-
-4. (154 pal) Los almohades, en fin, volverán a utilizar la entonces también llamada al-Qasaba al-Hamra (Alcazaba Roja), hasta que con la llegada de Muhammad I se inicia una verdadera refundación del lugar con consecuencias de mucho mayor alcance (fig. 1). El nuevo soberano nazarí, cuyo apellido familiar, al-Ahmar (el Rojo), venía a coincidir con la denominación que ya tenía el lugar y, asimismo, con el topónim […]
+3. (162 pal) La necesidad de realizar una investigación exhaustiva sobre la Alcazaba de la Alhambra viene motivada por dos razones fundamentales, la primera, por ser modelo de construcción defensiva, ejemplo de edificación militar para otras fortalezas hispanomusulmanas, y la segunda razón, citada anteriormente, por el hecho de ser una construcción que se encuentra tristemente a la sombra de los bellos palacio […]

@@ -8,13 +8,16 @@ import java.nio.ByteOrder
 @Single
 class LeerDB (private val context: Context) {
 
-    private var nombreDB: String = "rag_v3.db"
+    private var nombreDB: String = "rag_v4.db"
+
+    private val obsoletas = listOf("rag.db", "rag_v3.db")
     data class Indice(
         val textos: List<String>,
         val vectores: List<FloatArray>
     )
 
     fun cargarBaseDatos(): Indice {
+        limpiarObsoletas()
         val textos = ArrayList<String>()
         val vectores = ArrayList<FloatArray>()
         val dbFile = assetToFile(nombreDB)
@@ -53,5 +56,12 @@ class LeerDB (private val context: Context) {
             }
         }
         return storageFile
+    }
+
+    private fun limpiarObsoletas() {
+        obsoletas.forEach { nombre ->
+            listOf(nombre, "$nombre-journal", "$nombre-wal", "$nombre-shm", "$nombre.tmp")
+                .forEach { File(context.filesDir, it).delete() }
+        }
     }
 }

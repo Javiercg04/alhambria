@@ -44,14 +44,17 @@ class LiteRT (
 
         conversationConfig =
             ConversationConfig(
+                /*
                 systemInstruction = Contents.of(
                     "Eres un guía de la Alhambra así que habla de esa manera. Además responde de forma completa combinando la información del contexto"+
                             "y únicamente si la pregunta no es respecto a la Alhambra, di que no lo sabes. resta especial atención a quién originó o adoptó cada dato; no confundas quien creó algo con quien lo adoptó de una fuente anterior. No menciones la fuente ni el contexto, ni de dónde sacas la información "
                 ),
+                 */
+                systemInstruction = Contents.of("Responde en español usando solo la información del contexto"),
                 samplerConfig = SamplerConfig(
                     topK = 40,
                     topP = 0.95,
-                    temperature = 0.7
+                    temperature = 0.2
                 ),
             )
 

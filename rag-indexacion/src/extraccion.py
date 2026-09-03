@@ -22,46 +22,87 @@ MARCADORES = [
 ]
 
 REEMPLAZOS = {
-    "ˆ": "",            
+    "ˆ": "",
     "‘": "'", "’": "'",
     "“": '"', "”": '"',
-    "–": "-", "—": "-", 
+    "–": "-", "—": "-",
     "…": "...",
     "ā": "a", "ī": "i", "ū": "u",
     "ḥ": "h", "ḍ": "d", "ṭ": "t", "ṣ": "s", "ẓ": "z",
     "ḏ": "d", "ġ": "g", "š": "sh", "ŷ": "y", "ĵ": "y",
-    "à": "a", "á": "a", "â": "a", "ä": "a", "ã": "a", "å": "a",
-    "è": "e", "é": "e", "ê": "e",
+    # Acento grave, circunflejo y dieresis extranjeros: si se normalizan.
+    "à": "a", "â": "a", "ä": "a", "ã": "a", "å": "a",
+    "è": "e", "ê": "e", "ë": "e",
+    "ì": "i", "î": "i", "ï": "i",
+    "ò": "o", "ô": "o", "õ": "o",
+    "ù": "u", "û": "u",
+    "ç": "c",
 }
 
+MIN_PT = 8.0
+ZONA_BIBLIOGRAFIA = 0.5
 
 PROTEGIDAS = set("áéíóúüñÁÉÍÓÚÜÑ")
 
-def extraer_texto(ruta):
+def extraer_texto(ruta, min_pt = MIN_PT):
     doc = fitz.open(ruta)
-    flags = fitz.TEXT_PRESERVE_LIGATURES | fitz.TEXT_PRESERVE_WHITESPACE
-    texto = "\n".join(pagina.get_text("text", flags=flags) for pagina in doc) 
+
+    if not min_pt: 
+        flags = fitz.TEXT_PRESERVE_LIGATURES | fitz.TEXT_PRESERVE_WHITESPACE
+        texto = "\n".join(pagina.get_text("text", flags=flags) for pagina in doc) 
+        doc.close()
+        return texto
+
+    lineas = []
+    for pagina in doc:
+        for bloque in pagina.get_text("dict")["blocks"]:
+            for linea in bloque.get("lines",[]):
+                contenido = "".join(s["text"] for s in linea["spans"]
+                                    if s["size"] >= min_pt)
+                if contenido.strip():
+                    lineas.append(contenido)
+
     doc.close()
-    return texto
+    return "\n".join(lineas)
 
-def recortar_bibliografia(texto):
+def recortar_bibliografia(texto, verbose=False):
+    inicio = int(len(texto) * ZONA_BIBLIOGRAFIA)
     patron = re.compile("(" + "|".join(MARCADORES) + ")")
-    m = patron.search(texto)
-    if m:
-        texto = texto[:m.start()]
-    return texto
 
-def limpiar_texto(texto): 
-    texto = re.sub(r'-\s*\n\s*', '',texto)  
+    ultimo = None
+    for m in patron.finditer(texto, inicio):
+        ultimo = m
+
+    if ultimo is None:
+        return texto
+
+    return texto[: ultimo.start()]
+
+
+def limpiar_texto(texto):
+    texto = re.sub(r'-\s*\n\s*', '', texto)
     texto = re.sub(r'\s+', ' ', texto)
     texto = re.sub(r'[^\w\s.,;:!?()\-"]', '', texto)
     return texto.strip()
 
 def recortar_ruido(texto):
     texto = re.sub(r"Fig(?:ura)?\.?\s*\d+.*", " ", texto)
-
     texto = re.sub(r".*I\.?\s*S\.?\s*S\.?\s*N\.?.*", " ", texto)
     texto = re.sub(r"Artigrama,?\s*n[uú]m\.?\s*\d+.*", " ", texto)
+    texto = re.sub(r"Foto:\s*[^.]*\(Edilux\)\.?", " ", texto)
+    texto = re.sub(r"(?i)CUADERNOS DE LA ALHAMBRA\s*\|[^\n]*", " ", texto)
+    texto = re.sub(r"(?:Artículos|En la Alhambra|Homenaje)\s*•[^\n]*", " ", texto)
+    
+    texto = re.sub(r"ABSTRACT.*?(?=CÓMO CITAR|$)", " ", texto, flags=re.S)
+    texto = re.sub(r"KEY WORDS[^\n]*", " ", texto)
+    texto = re.sub(r"CÓMO CITAR / HOW TO CITE.*?ISSN[^\n]*", " ", texto, flags=re.S)
+
+    
+    texto = re.sub(r"(?:[A-ZÁÉÍÓÚÑ]\s){4,}[A-ZÁÉÍÓÚÑ]", " ", texto)
+    texto = re.sub(
+    r"The following article.*?(?=A NEW ARCHITECTURAL|Los textos referentes|$)",
+    " ", texto, flags=re.S
+        )
    
     for cab in CABECERAS:
         patron = r'\s*\d{0,4}\s*' + re.escape(cab) + r'\s*\d{0,4}\s*'
@@ -71,32 +112,25 @@ def recortar_ruido(texto):
     return texto 
 
 def normalizar(texto):
-    """Une palabras cortadas por guion, normaliza transcripcion y colapsa
-    espacios. Conserva los acentos espanoles."""
- 
-    # Une palabras partidas a final de linea: "arqui-\ntectura" -> "arquitectura"
+    texto = re.sub("\u00ad\\s*\n?\\s*", "", texto)
     texto = re.sub(r"-\s*\n\s*", "", texto)
- 
-    # Aplica el mapa de reemplazos de caracteres raros.
+    texto = re.sub(r"\n([A-ZÁÉÍÓÚÑ])\n(?=[a-záéíóúñ])", r"\n\1", texto)
     for viejo, nuevo in REEMPLAZOS.items():
         texto = texto.replace(viejo, nuevo)
  
-    # Quita marcas diacriticas residuales SIN tocar los acentos espanoles.
+    
     salida = []
     for ch in texto:
         if ch in PROTEGIDAS:
             salida.append(ch)
             continue
-        # descompone y elimina marcas combinantes (macrones, puntos, etc.)
         desc = unicodedata.normalize("NFKD", ch)
         base = "".join(c for c in desc if not unicodedata.combining(c))
         salida.append(base)
     texto = "".join(salida)
- 
-    # Deja solo caracteres utiles (letras, numeros, puntuacion basica).
+    
     texto = re.sub(r'[^\w\s.,;:!?()\-"\'/]', " ", texto)
  
-    # Colapsa todos los espacios/saltos en un solo espacio.
     texto = re.sub(r"\s+", " ", texto)
  
     return texto.strip()

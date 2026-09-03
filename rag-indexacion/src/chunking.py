@@ -8,6 +8,9 @@ el proyecto. Los valores por defecto se eligen para no superar el límite de
 import re
 import numpy as np
 
+TAM_CARACTERES = 1300
+SOLAPE_CARACTERES = 200
+
 
 ABREVIATURAS = {
     "sr", "sra", "dr", "dra", "d", "dña", "ud", "uds", "prof", "profa",
@@ -25,13 +28,9 @@ def _dividir_en_frases(texto):
         antes = texto[:fin_signo - 1]
         match_palabra = re.search(r'(\w+)$', antes)
         palabra = match_palabra.group(1).lower() if match_palabra else ""
-        # Solo se trata como abreviatura si HAY una palabra justo antes del
-        # punto y esa palabra es corta/conocida. Si no hay palabra (el punto
-        # va tras un paréntesis, comilla, número suelto, etc.), sí es fin de
-        # frase real y hay que cortar.
         es_abreviatura_o_inicial = bool(palabra) and (len(palabra) <= 1 or palabra in ABREVIATURAS)
         if es_abreviatura_o_inicial:
-            continue  # no es fin de frase real, seguimos acumulando
+            continue  
         frases.append(texto[pos:fin_signo].strip())
         pos = m.end()
     resto = texto[pos:].strip()
@@ -54,7 +53,7 @@ def trocear_por_palabra(texto, tam=200, solape=30):
 
 
 
-def trocear_por_caracteres(texto, tam=1328, solape=199):
+def trocear_por_caracteres(texto, tam=TAM_CARACTERES, solape=SOLAPE_CARACTERES):
     if solape >= tam:
         raise ValueError("El solapamiento debe ser menor que el tamaño del chunk")
     chunks = []
@@ -96,7 +95,7 @@ def trocear_por_sentencias(texto, tam=200, solape_frases=2):
     return chunks
 
 
-def trocear_semantica(texto, embedding, percentil=75, tam_max=500):
+def trocear_semantica(texto, embedding, percentil=75, tam_max=1300, tam_min = 250):
     frases = _dividir_en_frases(texto)
 
     if len(frases) <= 1:
@@ -120,7 +119,9 @@ def trocear_semantica(texto, embedding, percentil=75, tam_max=500):
 
     for i, distancia in enumerate(distancias):
         candidata = actual + " " + frases[i + 1]
-        if distancia > umbral or len(candidata) > tam_max:
+        cortar_por_tema = distancia > umbral and len(actual) >= tam_min
+        cortar_por_tamano = len(candidata) > tam_max
+        if cortar_por_tema or cortar_por_tamano: 
             chunks.append(actual)
             actual = frases[i + 1]
         else:
@@ -129,7 +130,7 @@ def trocear_semantica(texto, embedding, percentil=75, tam_max=500):
     chunks.append(actual)
     return chunks
 
-def trocear_recursiva(texto, tam=1328, solape=199, separadores=None):
+def trocear_recursiva(texto, tam=TAM_CARACTERES, solape=SOLAPE_CARACTERES, separadores=None):
     if separadores is None:
         separadores = ["\n\n", "\n", ". ", " ", ""]
     

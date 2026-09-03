@@ -1,0 +1,6 @@
+Id,Pregunta,Respuesta
+1,¿Cuál es mi nombre completo?,Tu nombre completo es Alejandro Ruiz Montero.
+2,¿Cuál es mi DNI?,Tu DNI es 4739XXX5-K.
+3,¿Cuántas letras tiene mi primer apellido?,Tu primer apellido Ruiz tiene 4 letras.
+4,¿Mi DNI termina en letra o en número?,Tu DNI termina en letra concretamente en la K.
+5,¿Cuáles son mis dos apellidos?,Tus dos apellidos son Ruiz y Montero.

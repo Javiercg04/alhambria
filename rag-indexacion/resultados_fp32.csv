@@ -1,0 +1,19 @@
+id,pregunta,doc,cifras,n_relevantes,recall@1,recall@3,recall@5,recall@10,posicion,rr
+g01,¿Que lema usaban los nazaries en la Alhambra?,N_22_08,False,1,1.0,1.0,1.0,1.0,1,1.0
+g02,¿Como se llamaba originalmente el Palacio de los Leones?,N_22_08,False,4,0.25,0.25,0.25,0.25,1,1.0
+g03,¿Cuantas columnas hay en el patio de los Leones?,N_22_08,True,1,1.0,1.0,1.0,1.0,1,1.0
+g04,¿Cual es la torre mas alta de la Alhambra y cuanto mide?,N_22_08,True,1,0.0,1.0,1.0,1.0,3,0.3333333333333333
+g05,¿De cuantas piezas de madera esta hecho el techo del Salon de Comares?,N_22_08,True,1,1.0,1.0,1.0,1.0,1,1.0
+g06,¿Cuantas piezas tiene la cupula de mocarabes de la Sala de Dos Hermanas?,N_22_08,True,1,1.0,1.0,1.0,1.0,1,1.0
+g07,¿Que quiere decir Generalife?,N_22_08,False,1,1.0,1.0,1.0,1.0,1,1.0
+g08,¿Que hay tallado en el arco de la Puerta de la Justicia?,N_22_08,False,1,1.0,1.0,1.0,1.0,1,1.0
+g09,¿Que organismo creo Muhammad II para la administracion del reino?,N_22_08,False,1,1.0,1.0,1.0,1.0,1,1.0
+g10,¿Que dimensiones tiene el recinto de la Alcazaba?,martin_alcazaba_torre_homenaje,True,1,0.0,0.0,0.0,0.0,0,0.0
+g11,¿Quien saco a la luz las casas del barrio castrense?,martin_alcazaba_torre_homenaje,True,1,0.0,0.0,1.0,1.0,4,0.25
+g12,¿Donde estan los versos sobre la pena de ser ciego en Granada?,martin_alcazaba_torre_homenaje,False,1,1.0,1.0,1.0,1.0,1,1.0
+g13,¿Desde cuando existe el jardin de los Adarves?,martin_alcazaba_torre_homenaje,True,1,0.0,0.0,1.0,1.0,5,0.2
+g14,¿Que grosor tienen los muros de la torre del Homenaje abajo del todo?,martin_alcazaba_torre_homenaje,True,1,0.0,1.0,1.0,1.0,3,0.3333333333333333
+g15,¿Para que servia el sotano de la torre del Homenaje?,martin_alcazaba_torre_homenaje,False,1,0.0,1.0,1.0,1.0,3,0.3333333333333333
+g16,¿Por que se llama torre Quebrada?,martin_alcazaba_torre_homenaje,True,1,1.0,1.0,1.0,1.0,1,1.0
+g17,¿Quien construyo la torre de los Hidalgos?,martin_alcazaba_torre_homenaje,False,1,0.0,1.0,1.0,1.0,3,0.3333333333333333
+g18,¿Como se entra a la torre del Homenaje?,martin_alcazaba_torre_homenaje,False,1,0.0,1.0,1.0,1.0,2,0.5

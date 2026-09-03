@@ -100,8 +100,8 @@ dependencies {
     // ONNX Runtime Extensions: aporta el operador del tokenizador
     implementation("com.microsoft.onnxruntime:onnxruntime-extensions-android:0.13.0")
 
-    //implementation("com.google.ai.edge.litertlm:litertlm-android:0.13.1")
-    implementation("com.google.ai.edge.litertlm:litertlm-android:latest.release")
+    implementation("com.google.ai.edge.litertlm:litertlm-android:0.13.1")
+    //implementation("com.google.ai.edge.litertlm:litertlm-android:latest.release")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     implementation(libs.koin.android)

@@ -1,7 +1,7 @@
 import sqlite3
 
 # 1. Conéctate a tu archivo de base de datos
-conexion = sqlite3.connect("../salida/indice/rag.db")
+conexion = sqlite3.connect("../salida/indice/rag_v4.db")
 cursor = conexion.cursor()
 
 # 2. Ver qué tablas existen en tu base de datos

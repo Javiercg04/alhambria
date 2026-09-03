@@ -18,7 +18,7 @@ modelo = SentenceTransformer(MODELO)
 vec_ref = modelo.encode(pregunta, normalize_embeddings = True)
 
 tokenizer = AutoTokenizer.from_pretrained(MODELO)
-ort_session = ort.InferenceSession(RUTA_INT, providers=["CPUExecutionProvider"])
+ort_session = ort.InferenceSession(RUTA_ONNX, providers=["CPUExecutionProvider"])
 
 entradas = tokenizer(pregunta, return_tensors="np", padding=True, truncation=True, max_length=512)
 vec_onnx = ort_session.run(["embedding"],{

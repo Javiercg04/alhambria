@@ -19,7 +19,7 @@ class EmbedderBGE(torch.nn.Module):
         self.backbone = AutoModel.from_pretrained(nombre) 
 
     def forward(self, input_ids, attention_mask):
-        salida = self.backbone(input_ids=input_ids, attention_mask=attention_mask) #Deja un vector por cada token
+        salida = self.backbone(input_ids=input_ids, attention_mask=attention_mask)
 
         cls = salida.last_hidden_state[:, 0] 
 

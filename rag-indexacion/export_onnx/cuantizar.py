@@ -8,6 +8,7 @@ RUTA_INT = os.path.join(CARPETA,"bge-m3.int8.onnx")
 quantize_dynamic(
     model_input = RUTA_ONNX,
     model_output = RUTA_INT,
-    weight_type = QuantType.QInt8
+    weight_type = QuantType.QInt8,
+    use_external_data_format=True,
 )
 

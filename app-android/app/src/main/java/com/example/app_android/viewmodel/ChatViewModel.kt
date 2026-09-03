@@ -39,8 +39,8 @@ class ChatViewModel(
 
     init {
         viewModelScope.launch {
-            inferenceAPI.initialize(AvailableLlm.GEMMA3) { p -> _progreso.value = 0.5f + p * 0.5f}
-            onnxEmbedder.initialize { p -> _progreso.value = p}
+            inferenceAPI.initialize(AvailableLlm.QWEN3) { p -> _progreso.value = p}
+            onnxEmbedder.initialize { p -> _progreso.value = 0.5f + p * 0.5f}
             launch(Dispatchers.Default) {
                 parityCheck.run()
             }

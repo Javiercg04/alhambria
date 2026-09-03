@@ -26,7 +26,7 @@ class ParityCheck(
 
                 val obtenido = embedder.embed(pregunta)
                 val sim = coseno(obtenido, esperado)
-                val ok = sim > 0.98f
+                val ok = sim > 0.99f
                 if (!ok) todasOk = false
 
                 Log.d("RAG", "paridad «$pregunta»  sim=${"%.5f".format(sim)}  ${if (ok) "OK" else "FALLO"}")

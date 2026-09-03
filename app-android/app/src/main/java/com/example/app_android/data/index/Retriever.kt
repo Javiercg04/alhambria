@@ -25,7 +25,7 @@ class Retriever (
         vectores = indice.vectores
     }
 
-    fun buscar( pregunta: String, topK: Int = 4): List<Pair<String, Float>> {
+    fun buscar( pregunta: String, topK: Int = 5): List<Pair<String, Float>> {
         val vec = embedder.embed(pregunta)
         val candidatos = vectores.mapIndexed { i,v -> i to v }
         val mejores = obtenerTopKSimilares(vec, candidatos, topK)
