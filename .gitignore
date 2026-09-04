@@ -227,3 +227,6 @@ rag-indexacion/salida/rag.db*
 *bge-m3*
 *.litertlm
 
+
+rag-indexacion/salida/
+.idea/
