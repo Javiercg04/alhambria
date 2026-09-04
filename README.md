@@ -51,14 +51,44 @@ alhambria/
 ├── rag-indexacion/      # generación de los artefactos
 │   ├── export_onnx/
 │   └── indexar.py
-└── app-android/             # la aplicación
+└── app-android/         # la aplicación
 ```
 
-## Orden de ejecución
+---
+
+## Dos formas de usarlo
+
+El índice, el tokenizador y el fichero de referencia ya están incluidos en `app-android/app/src/main/assets/`, así que hay dos caminos según lo que quieras hacer.
+
+| | Camino A: solo la app | Camino B: reconstruirlo todo |
+|---|---|---|
+| Para qué | Probar la aplicación | Cambiar el corpus o verificar el proceso |
+| Requiere Python | No | Sí |
+| Tiempo | Lo que tarde en compilar | Cerca de una hora |
+
+---
+
+## Camino A: compilar la aplicación
+
+No hace falta ejecutar ningún script de Python. Los artefactos ya están en el repositorio.
+
+```bash
+git clone https://github.com/Javiercg04/alhambria.git
+cd alhambria/app-android
+./gradlew assembleDebug            # Windows: gradlew.bat assembleDebug
+```
+
+El APK queda en `app-android/app/build/outputs/apk/debug/`. También puedes abrir la carpeta `app-android` directamente desde Android Studio y ejecutar el proyecto.
+
+La primera ejecución en el dispositivo requiere conexión a internet para descargar los dos modelos. A partir de ese momento la aplicación funciona sin conexión.
+
+---
+
+## Camino B: regenerar los artefactos
 
 Los pasos deben seguirse en orden. La fragmentación y la indexación emplean el modelo de embedding ya exportado y cuantizado, así que los tres primeros pasos van antes que el cuarto. Construir el índice con el modelo original y consultarlo después con el cuantizado situaría ambos conjuntos en espacios vectoriales distintos y degradaría la recuperación.
 
-**0. Obtener el proyecto**
+**0. Preparar el entorno**
 
 ```bash
 git clone https://github.com/Javiercg04/alhambria.git
@@ -68,25 +98,25 @@ source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-**1. Exportar el modelo de embedding** → `salida/modelo/bge-m3.onnx` y `bge-m3.onnx.data`
+**1. Exportar el modelo de embedding** → `rag-indexacion/salida/modelo/bge-m3.onnx` y `bge-m3.onnx.data`
 
 ```bash
 python rag-indexacion/export_onnx/exportar.py
 ```
 
-**2. Cuantizar el modelo** → `salida/modelo/bge-m3.int8.onnx`
+**2. Cuantizar el modelo** → `rag-indexacion/salida/modelo/bge-m3.int8.onnx`
 
 ```bash
 python rag-indexacion/export_onnx/cuantizar.py
 ```
 
-**3. Exportar el tokenizador** → `salida/modelo/tokenizer/tokenizer.onnx`
+**3. Exportar el tokenizador** → `rag-indexacion/salida/modelo/tokenizer/tokenizer.onnx`
 
 ```bash
 python rag-indexacion/export_onnx/exportar_tokenizer.py
 ```
 
-**4. Construir el índice** → `salida/indice/rag_vX.db`
+**4. Construir el índice** → `rag-indexacion/salida/indice/rag_vX.db`
 
 Extrae, limpia, fragmenta e indexa el corpus.
 
@@ -94,7 +124,7 @@ Extrae, limpia, fragmenta e indexa el corpus.
 python rag-indexacion/indexar.py
 ```
 
-**5. Desplegar los artefactos** → `android/app/src/main/assets/`
+**5. Desplegar los artefactos** → `app-android/app/src/main/assets/`
 
 Copia el índice, el tokenizador y el fichero de referencia.
 
@@ -102,12 +132,7 @@ Copia el índice, el tokenizador y el fichero de referencia.
 python rag-indexacion/desplegar_assets.py
 ```
 
-**6. Compilar la aplicación** → `android/app/build/outputs/apk/debug/`
-
-```bash
-cd android
-./gradlew assembleDebug            # Windows: gradlew.bat assembleDebug
-```
+Hecho esto, se compila la aplicación siguiendo el camino A.
 
 ---
 
@@ -116,6 +141,8 @@ cd android
 Ni el modelo de embedding cuantizado (555 MB) ni el modelo de lenguaje (497 MB) se versionan ni se empaquetan en el APK. La aplicación los descarga en el primer arranque desde las direcciones declaradas en `ModelProvider`. A partir de ese momento funciona sin conexión.
 
 Para cambiar el modelo de lenguaje basta con modificar la URL de `ensureLlmModel`.
+
+El resto del contenido de `rag-indexacion/salida/` tampoco se versiona, ya que se regenera con el camino B.
 
 ## Corpus
 
