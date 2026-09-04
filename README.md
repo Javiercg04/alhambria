@@ -51,7 +51,7 @@ alhambria/
 ├── rag-indexacion/      # generación de los artefactos
 │   ├── export_onnx/
 │   └── indexar.py
-└── android/             # la aplicación
+└── app-android/             # la aplicación
 ```
 
 ## Orden de ejecución
